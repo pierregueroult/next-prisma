@@ -19,7 +19,7 @@ class Logger {
     this._context = context
   }
 
-  log(type: LogType, message: string) {
+  log(type: LogType, message: string, ...args: string[]) {
     const icon = ICONS[type]
     const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })
     const timeStr = chalk.gray(now)
@@ -30,22 +30,23 @@ class Logger {
     const padding = ' '.repeat(paddingLength)
 
     console.log(` ${line}${padding}${context} ${timeStr}`)
+    console.log(...args.map(arg => chalk.gray(arg)))
   }
 
-  info(msg: string) {
-    this.log('info', msg)
+  info(msg: string, ...args: string[]) {
+    this.log('info', msg, ...args)
   }
 
-  success(msg: string) {
-    this.log('success', msg)
+  success(msg: string, ...args: string[]) {
+    this.log('success', msg, ...args)
   }
 
-  warn(msg: string) {
-    this.log('warn', msg)
+  warn(msg: string, ...args: string[]) {
+    this.log('warn', msg, ...args)
   }
 
-  error(msg: string) {
-    this.log('error', msg)
+  error(msg: string, ...args: string[]) {
+    this.log('error', msg, ...args)
   }
 }
 

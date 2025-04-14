@@ -10,98 +10,104 @@ import {
   updateOutputDirectoryInSchema,
 } from "../utils/fs";
 
-const TODO = "TODO";
+/**
+ * Exécute une commande Prisma et gère la sortie de façon uniforme
+ * @param command La commande Prisma à exécuter
+ * @param args Arguments pour la commande
+ * @param successMessage Message à afficher en cas de succès
+ * @param errorMessage Message de base pour l'erreur
+ * @returns true si la commande s'exécute avec succès, false sinon
+ */
+const executePrismaCommand = (
+  command: string,
+  args: string[],
+  successMessage: string,
+  errorMessage: string
+): boolean => {
+  const { stderr, exitCode } = x("npx", ["prisma", command, ...args]);
+  
+  if (exitCode !== 0) {
+    logger.error(errorMessage, stderr);
+    return false;
+  }
+  
+  logger.success(successMessage);
+  return true;
+};
 
-export const prismaMigrate = (prismaSchemaPath: string) => {
-  const { stderr, exitCode } = x("npx", [
-    "prisma",
+/**
+ * Lance une migration Prisma
+ */
+export const prismaMigrate = (prismaSchemaPath: string): boolean => 
+  executePrismaCommand(
     "migrate",
-    "dev",
-    "--schema",
-    prismaSchemaPath,
-    "--name",
-    "init",
-  ]);
+    ["dev", "--schema", prismaSchemaPath, "--name", "init"],
+    "Prisma migrate ran successfully",
+    "Failed to run Prisma migrate"
+  );
 
-  if (exitCode !== 0) {
-    logger.error("Failed to run Prisma migrate", stderr);
-    return false;
-  }
-
-  logger.success("Prisma migrate ran successfully");
-
-  return true;
-};
-
-export const prismaFormat = (prismaSchemaPath: string) => {
-  const { stderr, exitCode } = x("npx", [
-    "prisma",
+/**
+ * Formate le schéma Prisma
+ */
+export const prismaFormat = (prismaSchemaPath: string): boolean => 
+  executePrismaCommand(
     "format",
-    "--schema",
-    prismaSchemaPath,
-  ]);
+    ["--schema", prismaSchemaPath],
+    "Prisma schema formatted successfully",
+    "Failed to format Prisma schema"
+  );
 
-  if (exitCode !== 0) {
-    logger.error("Failed to format Prisma schema", stderr);
-    return false;
-  }
+/**
+ * Génère le client Prisma
+ */
+export const prismaGenerateClient = (prismaSchemaPath: string): boolean => 
+  executePrismaCommand(
+    "generate",
+    ["--schema", prismaSchemaPath],
+    "Prisma client generated successfully",
+    "Failed to generate Prisma client"
+  );
 
-  logger.success("Prisma schema formatted successfully");
-
-  return true;
-};
-
+/**
+ * Initialise Prisma avec configuration du dossier racine et du provider
+ */
 export const prismaInit = (
   prismaRoot: string,
   provider: string = "sqlite"
 ): boolean => {
-  const { stderr, exitCode } = x("npx", [
-    "prisma",
+  if (!executePrismaCommand(
     "init",
-    "--datasource-provider",
-    provider,
-  ]);
-
-  if (exitCode !== 0) {
-    logger.error("Failed to initialize Prisma", stderr);
+    ["--datasource-provider", provider],
+    "Prisma initialized successfully",
+    "Failed to initialize Prisma"
+  )) {
     return false;
   }
 
-  logger.success("Prisma initialized successfully");
-
+  // Si le chemin n'est pas le dossier prisma standard, déplacer les fichiers
   if (prismaRoot !== "prisma") {
-    const prismaRootExists = checkIfPrismaRootExistsSync(prismaRoot);
-    if (!prismaRootExists) {
-      createFolder(prismaRoot);
-    }
-
-    moveDir("./prisma", prismaRoot);
-    addGitIgnoreInPrismaRoot(prismaRoot, "client");
-    deleteFolder("./prisma");
-
-    logger.success(TODO);
+    handleCustomPrismaRoot(prismaRoot);
   }
 
+  // Ajouter les modèles de base et configurer le schéma
   addBasicModelsToSchema(prismaRoot, "schema.prisma");
   updateOutputDirectoryInSchema(prismaRoot, "schema.prisma", "client");
 
   return true;
 };
 
-export const prismaGenerateClient = (prismaSchemaPath: string) => {
-  const { stderr, exitCode } = x("npx", [
-    "prisma",
-    "generate",
-    "--schema",
-    prismaSchemaPath,
-  ]);
-
-  if (exitCode !== 0) {
-    logger.error("Failed to generate Prisma client", stderr);
-    return false;
+/**
+ * Gère le déplacement des fichiers Prisma vers un répertoire personnalisé
+ */
+const handleCustomPrismaRoot = (prismaRoot: string): void => {
+  const prismaRootExists = checkIfPrismaRootExistsSync(prismaRoot);
+  if (!prismaRootExists) {
+    createFolder(prismaRoot);
   }
 
-  logger.success("Prisma client generated successfully");
-
-  return true;
+  moveDir("./prisma", prismaRoot);
+  addGitIgnoreInPrismaRoot(prismaRoot, "client");
+  deleteFolder("./prisma");
+  
+  logger.success(`Prisma files moved to custom directory: ${prismaRoot}`);
 };
