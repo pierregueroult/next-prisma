@@ -92,6 +92,7 @@ export const prismaInit = (
   // Ajouter les modèles de base et configurer le schéma
   addBasicModelsToSchema(prismaRoot, "schema.prisma");
   updateOutputDirectoryInSchema(prismaRoot, "schema.prisma", "client");
+  addGitIgnoreInPrismaRoot(prismaRoot, "client");
 
   return true;
 };
@@ -106,7 +107,6 @@ const handleCustomPrismaRoot = (prismaRoot: string): void => {
   }
 
   moveDir("./prisma", prismaRoot);
-  addGitIgnoreInPrismaRoot(prismaRoot, "client");
   deleteFolder("./prisma");
   
   logger.success(`Prisma files moved to custom directory: ${prismaRoot}`);
