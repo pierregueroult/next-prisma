@@ -1,0 +1,22 @@
+{
+  "name": "next-prisma",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.6.5",
+  "devDependencies": {
+    "@types/node": "^22.14.1"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.6.0",
+    "chalk": "^5.4.1",
+    "consola": "^3.4.2",
+    "next": "^15.3.0"
+  }
+}
