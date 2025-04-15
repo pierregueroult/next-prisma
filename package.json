@@ -9,6 +9,7 @@
   ],
   "scripts": {
     "build": "tsc",
+    "rebuild": "rm -rf dist && pnpm build",
     "prepublishOnly": "npm run build"
   },
   "keywords": [],

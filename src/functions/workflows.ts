@@ -9,6 +9,8 @@ import {
   moveDir,
   updateOutputDirectoryInSchema,
 } from "../utils/fs";
+import { existsSync } from "node:fs";
+import { join } from "node:path";
 
 /**
  * Exécute une commande Prisma et gère la sortie de façon uniforme
@@ -93,6 +95,7 @@ export const prismaInit = (
   addBasicModelsToSchema(prismaRoot, "schema.prisma");
   updateOutputDirectoryInSchema(prismaRoot, "schema.prisma", "client");
   addGitIgnoreInPrismaRoot(prismaRoot, "client");
+  addPrismaToDependencies();
 
   return true;
 };
@@ -111,3 +114,46 @@ const handleCustomPrismaRoot = (prismaRoot: string): void => {
   
   logger.success(`Prisma files moved to custom directory: ${prismaRoot}`);
 };
+
+const addPrismaToDependencies = () => {
+  const packageManager = detectPackageManager();
+  
+  let installCommand = "";
+  switch (packageManager) {
+    case "npm":
+      installCommand = "npm install prisma --save-dev";
+      break;
+    case "yarn":
+      installCommand = "yarn add prisma --dev";
+      break;
+    case "pnpm":
+      installCommand = "pnpm add prisma --save-dev";
+      break;
+    case "bun":
+      installCommand = "bun add prisma --dev";
+      break;
+    default:
+      logger.error("Unsupported package manager");
+      return false;
+  }
+
+  logger.info(`Adding Prisma to dependencies using ${packageManager}...`);
+
+  const { stderr, exitCode } = x(installCommand.split(" ")[0], installCommand.split(" ").slice(1));
+
+  if (exitCode !== 0) {
+    logger.error("Failed to add Prisma to dependencies", stderr);
+    return false;
+  }
+  
+  logger.success("Prisma added to dependencies successfully");
+  return true;
+}
+
+function detectPackageManager(projectRoot: string = process.cwd()): 'npm' | 'yarn' | 'pnpm' | 'bun' {
+  if (existsSync(join(projectRoot, 'pnpm-lock.yaml'))) return 'pnpm';
+  if (existsSync(join(projectRoot, 'yarn.lock'))) return 'yarn';
+  if (existsSync(join(projectRoot, 'bun.lockb'))) return 'bun';
+  if (existsSync(join(projectRoot, 'package-lock.json'))) return 'npm';
+  return 'npm';
+}
