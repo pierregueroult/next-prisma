@@ -1,6 +1,6 @@
 {
   "name": "@pgdev/next-prisma",
-  "version": "1.0.0",
+  "version": "0.0.0",
   "description": "",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -10,7 +10,8 @@
   "scripts": {
     "build": "tsc",
     "rebuild": "rm -rf dist && pnpm build",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "npm run build",
+    "release": "release-it"
   },
   "keywords": [],
   "author": "",
@@ -18,6 +19,8 @@
   "packageManager": "pnpm@10.6.5",
   "devDependencies": {
     "@types/node": "^22.14.1",
+    "auto-changelog": "^2.5.0",
+    "release-it": "^18.1.2",
     "typescript": "^5.8.3"
   },
   "dependencies": {
@@ -27,5 +30,27 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "release-it": {
+    "$schema": "https://unpkg.com/release-it/schema/release-it.json",
+    "git": {
+      "requireBranch": "releases",
+      "commitMessage": "chore: release v${version}"
+    },
+    "hooks": {
+      "before:init": [
+        "git pull",
+        "npm run build"
+      ],
+      "after:bump": [
+        "npx auto-changelog -p"
+      ]
+    },
+    "github": {
+      "release": true
+    },
+    "npm": {
+      "publish": true
+    }
   }
 }
