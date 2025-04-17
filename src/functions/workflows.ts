@@ -11,6 +11,7 @@ import {
 } from "../utils/fs";
 import { existsSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import { spawn } from "node:child_process";
 
 /**
  * Exécute une commande Prisma et gère la sortie de façon uniforme
@@ -24,7 +25,7 @@ const executePrismaCommand = (
   command: string,
   args: string[],
   successMessage: string,
-  errorMessage: string
+  errorMessage: string,
 ): boolean => {
   const { stderr, exitCode } = x("npx", ["prisma", command, ...args]);
 
@@ -45,7 +46,7 @@ export const prismaMigrate = (prismaSchemaPath: string): boolean =>
     "migrate",
     ["dev", "--schema", prismaSchemaPath, "--name", "init"],
     "Prisma migrate ran successfully",
-    "Failed to run Prisma migrate"
+    "Failed to run Prisma migrate",
   );
 
 /**
@@ -56,7 +57,7 @@ export const prismaFormat = (prismaSchemaPath: string): boolean =>
     "format",
     ["--schema", prismaSchemaPath],
     "Prisma schema formatted successfully",
-    "Failed to format Prisma schema"
+    "Failed to format Prisma schema",
   );
 
 /**
@@ -67,7 +68,7 @@ export const prismaGenerateClient = (prismaSchemaPath: string): boolean =>
     "generate",
     ["--schema", prismaSchemaPath],
     "Prisma client generated successfully",
-    "Failed to generate Prisma client"
+    "Failed to generate Prisma client",
   );
 
 /**
@@ -75,14 +76,14 @@ export const prismaGenerateClient = (prismaSchemaPath: string): boolean =>
  */
 export const prismaInit = (
   prismaRoot: string,
-  provider: string = "sqlite"
+  provider: string = "sqlite",
 ): boolean => {
   if (
     !executePrismaCommand(
       "init",
       ["--datasource-provider", provider],
       "Prisma initialized successfully",
-      "Failed to initialize Prisma"
+      "Failed to initialize Prisma",
     )
   ) {
     return false;
@@ -103,6 +104,47 @@ export const prismaInit = (
   return true;
 };
 
+// Variable module-scope pour stocker le processus
+let prismaProcess: ReturnType<typeof spawn> | null = null;
+
+export const prismaStudio = (schemaPath: string): boolean => {
+  logger.info("Starting Prisma Studio...");
+
+  // Utiliser spawn directement
+  prismaProcess = spawn(
+    "npx",
+    ["prisma", "studio", "--schema", schemaPath, "--browser", "none"],
+    {
+      stdio: "pipe",
+      detached: false,
+    },
+  );
+
+  if (!prismaProcess.pid) {
+    logger.error("Failed to start Prisma Studio");
+    return false;
+  }
+
+  // Configurer la gestion des erreurs
+  prismaProcess.on("error", (err) => {
+    logger.error("Prisma Studio error:", err.message);
+  });
+
+  // Configurer le nettoyage automatique
+  process.on("exit", () => {
+    prismaProcess?.kill();
+  });
+
+  ["SIGINT", "SIGTERM", "SIGQUIT"].forEach((signal) => {
+    process.on(signal, () => {
+      logger.info(`Stopping Prisma Studio...`);
+      prismaProcess?.kill();
+    });
+  });
+
+  logger.success("Prisma Studio is running on http://localhost:5555");
+  return true;
+};
 /**
  * Gère le déplacement des fichiers Prisma vers un répertoire personnalisé
  */
@@ -144,7 +186,7 @@ const addPrismaToDependencies = () => {
 
   const { stderr, exitCode } = x(
     installCommand.split(" ")[0],
-    installCommand.split(" ").slice(1)
+    installCommand.split(" ").slice(1),
   );
 
   if (exitCode !== 0) {
@@ -157,7 +199,7 @@ const addPrismaToDependencies = () => {
 };
 
 function detectPackageManager(
-  projectRoot: string = process.cwd()
+  projectRoot: string = process.cwd(),
 ): "npm" | "yarn" | "pnpm" | "bun" {
   if (existsSync(join(projectRoot, "pnpm-lock.yaml"))) return "pnpm";
   if (existsSync(join(projectRoot, "yarn.lock"))) return "yarn";
@@ -168,13 +210,11 @@ function detectPackageManager(
 
 function addLibraryToInitPrismaSingletonInstance(
   prismaRoot: string,
-  clientFolderName: string = "client"
+  clientFolderName: string = "client",
 ) {
   const indexPath = join(prismaRoot, "index.ts");
 
-  logger.info(
-    `Creating Prisma singleton instance in ${indexPath}...`
-  );
+  logger.info(`Creating Prisma singleton instance in ${indexPath}...`);
 
   if (!existsSync(indexPath)) {
     const content = `
@@ -193,6 +233,6 @@ export default prisma;
   }
 
   logger.success(
-    `Prisma singleton instance created successfully in ${indexPath}`
+    `Prisma singleton instance created successfully in ${indexPath}`,
   );
 }

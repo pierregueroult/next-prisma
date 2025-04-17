@@ -1,59 +1,73 @@
-import { spawnSync, type SpawnSyncOptions } from "node:child_process";
+import {
+  spawn,
+  spawnSync,
+  type SpawnOptions,
+  type SpawnSyncOptions,
+  type ChildProcess,
+} from "node:child_process";
 
-/**
- * Options pour l'exécution d'une commande
- */
-interface ExecOptions extends SpawnSyncOptions {}
-
-/**
- * Résultat de l'exécution d'une commande
- */
-interface ExecResult {
-  /** Sortie standard de la commande */
-  stdout: string;
-  /** Sortie d'erreur de la commande */
-  stderr: string;
-  /** Code de sortie de la commande (null si la commande n'a pas pu être exécutée) */
-  exitCode: number | null;
+interface ExecOptions {
+  background?: boolean;
+  throwOnError?: boolean;
+  nodeOptions?: SpawnOptions & SpawnSyncOptions;
 }
 
-/**
- * Exécute une commande synchrone et retourne son résultat
- * @param command La commande à exécuter
- * @param args Les arguments de la commande
- * @param options Options supplémentaires pour l'exécution
- * @returns Le résultat de l'exécution contenant stdout, stderr et le code de sortie
- */
+interface ExecResult {
+  stdout: string;
+  stderr: string;
+  exitCode: number | null;
+  process?: ChildProcess;
+}
+
 export function x(
   command: string,
   args: string[] = [],
   options: ExecOptions = {}
 ): ExecResult {
-  // Fusionner les options par défaut avec celles fournies
-  const spawnOptions: SpawnSyncOptions = {
+  const {
+    background = false,
+    throwOnError = false,
+    nodeOptions = {},
+  } = options;
+
+  if (background) {
+    const child = spawn(command, args, {
+      stdio: "ignore",
+      detached: true,
+      ...nodeOptions,
+    });
+
+    return {
+      stdout: "",
+      stderr: "",
+      exitCode: null,
+      process: child,
+    };
+  }
+
+  const result = spawnSync(command, args, {
     encoding: "utf8",
     stdio: "pipe",
-    ...options
-  };
+    ...nodeOptions,
+  });
 
-  // Exécuter la commande
-  const result = spawnSync(command, args, spawnOptions);
+  if (throwOnError && result.status !== 0) {
+    const err = new Error(`Command failed: ${command} ${args.join(" ")}`);
+    (err as any).stdout = result.stdout;
+    (err as any).stderr = result.stderr;
+    (err as any).exitCode = result.status;
+    throw err;
+  }
 
-  // Traiter et normaliser le résultat
   return {
     stdout: normalizeOutput(result.stdout),
     stderr: normalizeOutput(result.stderr),
-    exitCode: result.status
+    exitCode: result.status,
   };
 }
 
-/**
- * Normalise une sortie de commande en chaîne de caractères
- * @param output Sortie potentiellement nulle ou bufferisée
- * @returns Chaîne de caractères normalisée et nettoyée
- */
 function normalizeOutput(output: unknown): string {
   if (!output) return "";
-  const stringOutput = typeof output === 'string' ? output : String(output);
+  const stringOutput = typeof output === "string" ? output : String(output);
   return stringOutput.trim();
 }

@@ -9,8 +9,6 @@ const ICONS: Record<LogType, string> = {
   error: chalk.red("✖"),
 };
 
-const MAX_WIDTH = process.stdout.columns || 100;
-
 class Logger {
   _context: string;
 
@@ -19,7 +17,10 @@ class Logger {
   }
 
   log(type: LogType, message: string, ...args: string[]) {
+    const MAX_WIDTH = process.stdout.columns || 100;
+
     const icon = ICONS[type];
+
     const now = new Date().toLocaleTimeString([], {
       hour: "2-digit",
       minute: "2-digit",
@@ -31,7 +32,7 @@ class Logger {
     const line = `${icon} ${message}`;
     const paddingLength = Math.max(
       1,
-      MAX_WIDTH - line.length - timeStr.length - context.length
+      MAX_WIDTH - line.length - timeStr.length - context.length + 25,
     );
     const padding = " ".repeat(paddingLength);
 
