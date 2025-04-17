@@ -1,86 +1,53 @@
 import type { NextConfig } from "next";
-import { Options } from "./types/options";
-import {
-  checkIfMigrationsFolderExistsSync,
-  checkIfPrismaRootExistsSync,
-} from "./utils/fs";
-import {
-  prismaFormat,
-  prismaGenerateClient,
-  prismaInit,
-  prismaMigrate,
-  prismaStudio,
-} from "./functions/workflows";
+import type { PrismaConfig } from "./types/config";
 import { join } from "node:path";
+import { migrationsDirectoryExists, prismaRootExists } from "./filesystem/operations";
+import { formatSchema, generateClient, initializePrisma, runMigration, startStudio } from "./prisma/commands";
 
-let isPrismaEnvironmentSetup = false;
+let prismaInitialized = false;
 
-/**
- * Crée une configuration Prisma pour Next.js
- * @param config Configuration Next.js existante
- * @param options Options pour la configuration Prisma
- * @returns Configuration Next.js étendue avec Prisma
- */
-export const withNextPrisma = (
+export function withNextPrisma(
   config: NextConfig = {},
-  {
-    runMigration = true,
-    prismaRoot = "prisma",
-    provider = "sqlite",
-    startStudio = false,
-  }: Partial<Options> = {},
-): NextConfig => {
+  { runMigration = true, prismaRoot = "prisma", dbProvider = "sqlite", startStudio = false }: Partial<PrismaConfig> = {}
+): NextConfig {
   return {
     ...config,
-    webpack: (webpackConfig, { dev, isServer, ...rest }) => {
+    webpack: (webpackConfig, { dev, isServer, ...options }) => {
       if (dev && isServer) {
-        setupPrismaEnvironment(prismaRoot, provider, runMigration, startStudio);
+        setupPrisma(prismaRoot, dbProvider, runMigration, startStudio);
       }
 
       if (typeof config.webpack === "function") {
-        return config.webpack(webpackConfig, { dev, isServer, ...rest });
+        return config.webpack(webpackConfig, { dev, isServer, ...options });
       }
       return webpackConfig;
     },
   };
-};
+}
 
-/**
- * Configure l'environnement Prisma
- * @param prismaRoot Dossier racine de Prisma
- * @param provider Fournisseur de base de données
- * @param runMigration Si true, exécute les migrations
- */
-function setupPrismaEnvironment(
-  prismaRoot: string,
-  provider: string,
-  runMigration: boolean,
-  startStudio: boolean,
-): void {
-  if (isPrismaEnvironmentSetup) {
+function setupPrisma(rootDir: string, dbProvider: string, shouldRunMigration: boolean, enableStudio: boolean): void {
+  if (prismaInitialized) {
     return;
   }
 
-  const schemaPath = join(prismaRoot, "schema.prisma");
-  const prismaRootExists = checkIfPrismaRootExistsSync(prismaRoot);
-  const prismaMigrationsFolderExists =
-    checkIfMigrationsFolderExistsSync(prismaRoot);
+  const schemaPath = join(rootDir, "schema.prisma");
+  const rootExists = prismaRootExists(rootDir);
+  const migrationsExist = migrationsDirectoryExists(rootDir);
 
-  // Initialiser Prisma si le dossier racine n'existe pas
-  if (!prismaRootExists) {
-    prismaInit(prismaRoot, provider);
-    prismaFormat(schemaPath);
+  if (!rootExists) {
+    initializePrisma(rootDir, dbProvider);
+    formatSchema(schemaPath);
   }
 
-  // Exécuter les migrations si nécessaire
-  if (!prismaMigrationsFolderExists && runMigration) {
-    prismaMigrate(schemaPath);
+  if (!migrationsExist && shouldRunMigration) {
+    runMigration(schemaPath);
   }
 
-  // Toujours générer le client Prisma
-  prismaGenerateClient(schemaPath);
+  generateClient(schemaPath);
 
-  if (startStudio) prismaStudio(schemaPath);
+  if (enableStudio) {
+    startStudio(schemaPath);
+  }
 
-  isPrismaEnvironmentSetup = true;
+  prismaInitialized = true;
 }
