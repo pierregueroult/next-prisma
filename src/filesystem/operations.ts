@@ -86,22 +86,21 @@ export function moveDirectory(sourceDir: string, targetDir: string): void {
 export function addDefaultModels(rootDir: string, schemaFile: string = "schema.prisma"): void {
   const schemaPath = buildPrismaPath(rootDir, schemaFile);
   const defaultModels = `\
-  model User {
-    id    Int     @id @default(autoincrement())
-    email String  @unique
-    name  String?
-    posts Post[]
-  }
-  
-  model Post {
-    id        Int     @id @default(autoincrement())
-    title     String
-    content   String?
-    published Boolean @default(false)
-    author    User    @relation(fields: [authorId], references: [id])
-    authorId  Int
-  }
-  `;
+model User {
+  id    Int     @id @default(autoincrement())
+  email String  @unique
+  name  String?
+  posts Post[]
+}
+
+model Post {
+  id        Int     @id @default(autoincrement())
+  title     String
+  content   String?
+  published Boolean @default(false)
+  author    User    @relation(fields: [authorId], references: [id])
+  authorId  Int
+}`;
 
   writeFileSync(schemaPath, defaultModels, { flag: "a" });
 }
@@ -121,9 +120,9 @@ export function updateClientOutputDirectory(
 
   const generatorPattern = /generator client \{\s*provider\s*=\s*"prisma-client-js"\s*(?:output\s*=\s*".*?"\s*)?\}/g;
   const updatedGenerator = `generator client {
-    provider = "prisma-client-js"
-    output   = "./${outputDir}"
-  }`;
+  provider = "prisma-client-js"
+  output   = "./${outputDir}"
+}`;
 
   const updatedContent = schemaContent.match(generatorPattern)
     ? schemaContent.replace(generatorPattern, updatedGenerator)
@@ -135,11 +134,11 @@ export function updateClientOutputDirectory(
 export function addGitIgnoreFile(rootDir: string, clientDir: string = "client"): void {
   const gitIgnorePath = buildPrismaPath(rootDir, ".gitignore");
   const gitignoreContent = `\
-  # Ignore the client folder
-  ${clientDir}
-  # Ignore the migrations lock file
-  migrations/migration_lock.toml
-  `;
+# Ignore the client folder
+${clientDir}
+# Ignore the migrations lock file
+migrations/migration_lock.toml
+`;
 
   try {
     writeFileSync(gitIgnorePath, gitignoreContent, { flag: "wx" });
