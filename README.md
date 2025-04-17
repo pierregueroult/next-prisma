@@ -7,6 +7,8 @@
 
 Loving both [Prisma](https://www.prisma.io/) and [Next.js](https://nextjs.org/) but struggling to make them work together? This package is for you!
 
+(only works with webpack, no turbopack sorry)
+
 ## Features
 
 - **Automatic Prisma Client Generation**: Automatically generates the Prisma client when you run `next dev`.
