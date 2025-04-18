@@ -1,0 +1,31 @@
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/"
+    target-branch: "development"
+    assignees:
+      - "pierregueroult"
+    schedule:
+      interval: "daily"
+      time: "07:00"
+      timezone: "Europe/Paris"
+    labels:
+      - "dependabot"
+      - "dependencies"
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+    groups:
+      code-quality:
+        patterns:
+          - "eslint*"
+          - "eslint-config-*"
+          - "eslint-plugin-*"
+          - "prettier*"
+          - "@eslint/*"
+          - "@typescript-eslint/*"
+          - "globals"
+      release-tools:
+        patterns:
+          - "release-it"
+          - "auto-changelog"

@@ -1,0 +1,23 @@
+name: ❓ Question
+description: Ask a question or request clarification about next-prisma
+labels: ["question"]
+body:
+  - type: textarea
+    id: question
+    attributes:
+      label: Your question
+      description: Ask your question clearly and concisely.
+      placeholder: |
+        e.g. Does next-prisma do that ?
+    validations:
+      required: true
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional context or media (optional)
+      description: Provide any additional context or media that may help us understand your question better.
+      placeholder: |
+        Here you can find a screenshot related to my question.
+    validations:
+      required: false
