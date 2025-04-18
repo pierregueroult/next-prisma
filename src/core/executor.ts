@@ -5,6 +5,7 @@ import {
   type SpawnSyncOptions,
   type ChildProcess,
 } from "node:child_process";
+import CommandError from "../errors/command-error";
 
 interface ExecutionOptions {
   background?: boolean;
@@ -52,11 +53,13 @@ export function executeCommand(
   });
 
   if (failOnError && result.status !== 0) {
-    const error = new Error(`Command failed: ${command} ${args.join(" ")}`);
-    (error as any).stdout = result.stdout;
-    (error as any).stderr = result.stderr;
-    (error as any).exitCode = result.status;
-    throw error;
+    throw new CommandError(
+      command,
+      args,
+      formatOutput(result.stdout),
+      formatOutput(result.stderr),
+      result.status ?? -1,
+    );
   }
 
   return {
