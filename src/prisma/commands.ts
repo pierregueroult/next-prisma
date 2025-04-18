@@ -13,8 +13,17 @@ import {
   updateClientOutputDirectory,
 } from "../filesystem/operations";
 
-function runPrismaCommand(command: string, args: string[], successMessage: string, errorMessage: string): boolean {
-  const { stderr, exitCode } = executeCommand("npx", ["prisma", command, ...args]);
+function runPrismaCommand(
+  command: string,
+  args: string[],
+  successMessage: string,
+  errorMessage: string,
+): boolean {
+  const { stderr, exitCode } = executeCommand("npx", [
+    "prisma",
+    command,
+    ...args,
+  ]);
 
   if (exitCode !== 0) {
     logger.error(errorMessage, stderr);
@@ -30,7 +39,7 @@ export function runMigration(schemaPath: string): boolean {
     "migrate",
     ["dev", "--schema", schemaPath, "--name", "init"],
     "Migration completed successfully",
-    "Migration failed"
+    "Migration failed",
   );
 }
 
@@ -39,7 +48,7 @@ export function formatSchema(schemaPath: string): boolean {
     "format",
     ["--schema", schemaPath],
     "Schema formatted successfully",
-    "Schema formatting failed"
+    "Schema formatting failed",
   );
 }
 
@@ -48,17 +57,20 @@ export function generateClient(schemaPath: string): boolean {
     "generate",
     ["--schema", schemaPath],
     "Client generated successfully",
-    "Client generation failed"
+    "Client generation failed",
   );
 }
 
-export function initializePrisma(rootDir: string, dbProvider: string = "sqlite"): boolean {
+export function initializePrisma(
+  rootDir: string,
+  dbProvider: string = "sqlite",
+): boolean {
   if (
     !runPrismaCommand(
       "init",
       ["--datasource-provider", dbProvider],
       "Prisma initialized successfully",
-      "Prisma initialization failed"
+      "Prisma initialization failed",
     )
   ) {
     return false;
@@ -82,10 +94,14 @@ let studioProcess: ReturnType<typeof spawn> | null = null;
 export function startStudio(schemaPath: string): boolean {
   logger.info("Starting Prisma Studio...");
 
-  studioProcess = spawn("npx", ["prisma", "studio", "--schema", schemaPath, "--browser", "none"], {
-    stdio: "pipe",
-    detached: false,
-  });
+  studioProcess = spawn(
+    "npx",
+    ["prisma", "studio", "--schema", schemaPath, "--browser", "none"],
+    {
+      stdio: "pipe",
+      detached: false,
+    },
+  );
 
   if (!studioProcess.pid) {
     logger.error("Failed to start Prisma Studio");
@@ -147,7 +163,10 @@ function addPrismaDependency() {
 
   logger.info(`Adding Prisma dependency using ${packageManager}...`);
 
-  const { stderr, exitCode } = executeCommand(installCommand.split(" ")[0], installCommand.split(" ").slice(1));
+  const { stderr, exitCode } = executeCommand(
+    installCommand.split(" ")[0],
+    installCommand.split(" ").slice(1),
+  );
 
   if (exitCode !== 0) {
     logger.error("Failed to add Prisma dependency", stderr);
@@ -158,7 +177,9 @@ function addPrismaDependency() {
   return true;
 }
 
-function detectPackageManager(projectRoot: string = process.cwd()): "npm" | "yarn" | "pnpm" | "bun" {
+function detectPackageManager(
+  projectRoot: string = process.cwd(),
+): "npm" | "yarn" | "pnpm" | "bun" {
   if (existsSync(join(projectRoot, "pnpm-lock.yaml"))) return "pnpm";
   if (existsSync(join(projectRoot, "yarn.lock"))) return "yarn";
   if (existsSync(join(projectRoot, "bun.lockb"))) return "bun";

@@ -1,14 +1,28 @@
 import type { NextConfig } from "next";
 import type { PrismaConfig } from "./types/config";
 import { join } from "node:path";
-import { migrationsDirectoryExists, prismaRootExists } from "./filesystem/operations";
-import { formatSchema, generateClient, initializePrisma, runMigration, startStudio } from "./prisma/commands";
+import {
+  migrationsDirectoryExists,
+  prismaRootExists,
+} from "./filesystem/operations";
+import {
+  formatSchema,
+  generateClient,
+  initializePrisma,
+  runMigration,
+  startStudio,
+} from "./prisma/commands";
 
 let prismaInitialized = false;
 
 export function withNextPrisma(
   config: NextConfig = {},
-  { runMigration = true, prismaRoot = "prisma", dbProvider = "sqlite", startStudio = false }: Partial<PrismaConfig> = {}
+  {
+    runMigration = true,
+    prismaRoot = "prisma",
+    dbProvider = "sqlite",
+    startStudio = false,
+  }: Partial<PrismaConfig> = {},
 ): NextConfig {
   return {
     ...config,
@@ -25,7 +39,12 @@ export function withNextPrisma(
   };
 }
 
-function setupPrisma(rootDir: string, dbProvider: string, shouldRunMigration: boolean, enableStudio: boolean): void {
+function setupPrisma(
+  rootDir: string,
+  dbProvider: string,
+  shouldRunMigration: boolean,
+  enableStudio: boolean,
+): void {
   if (prismaInitialized) {
     return;
   }

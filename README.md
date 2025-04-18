@@ -57,6 +57,7 @@ You can configure the package by adding a second argument to the `withNextPrisma
   - The folder where prisma lives, where the `schema.prisma` will be created and where the migrations and clients will be stored.
 
 - `dbProvider`: string (default: "sqlite")
+
   - Tell the package which database provider to use. It will be used to create the `schema.prisma` file. The default is `sqlite`, but you can also use `postgresql`, `mysql`,`sqlserver`, `mariadb`, `mongodb` and `cockroachdb`.
 
 - `startStudio`: boolean (default: false)

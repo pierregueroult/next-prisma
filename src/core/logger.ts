@@ -31,11 +31,17 @@ export class Logger {
 
     const paddingSize = Math.max(
       1,
-      displayWidth - displayMessage.length - formattedTime.length - formattedContext.length + 25
+      displayWidth -
+        displayMessage.length -
+        formattedTime.length -
+        formattedContext.length +
+        25,
     );
     const padding = " ".repeat(paddingSize);
 
-    console.log(` ${displayMessage}${padding}${formattedContext} ${formattedTime}`);
+    console.log(
+      ` ${displayMessage}${padding}${formattedContext} ${formattedTime}`,
+    );
 
     if (details.length > 0) {
       console.log(...details.map((detail) => chalk.gray(detail)));
