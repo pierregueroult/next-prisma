@@ -19,8 +19,10 @@ function pathExists(path: string, type: FileType): boolean {
   try {
     const stats = statSync(path);
     return type === FileType.FILE ? stats.isFile() : stats.isDirectory();
-  } catch (err: any) {
-    if (err.code === "ENOENT") return false;
+  } catch (err) {
+    if (err instanceof Error && "code" in err && err.code === "ENOENT") {
+      return false;
+    }
     throw err;
   }
 }
@@ -169,12 +171,14 @@ ${clientDir}
 # Ignore the migrations lock file
 migrations/migration_lock.toml
 `;
-
   try {
     writeFileSync(gitIgnorePath, gitignoreContent, { flag: "wx" });
-  } catch (err: any) {
-    if (err.code !== "EEXIST") {
-      throw err;
+  } catch (err) {
+    // Vérification typesafe de l'erreur
+    if (err instanceof Error && "code" in err && err.code === "EEXIST") {
+      // Le fichier existe déjà, on ignore l'erreur
+      return;
     }
+    throw err;
   }
 }
