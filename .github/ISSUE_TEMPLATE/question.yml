@@ -1,6 +1,6 @@
 name: ❓ Question
 description: Ask a question or request clarification about next-prisma
-labels: ["[question]"]
+labels: ["question"]
 body:
   - type: textarea
     id: question
