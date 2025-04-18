@@ -1,0 +1,30 @@
+"[core]":
+  - src/**/*
+
+"[test]":
+  - test/**/*
+
+"[documentation]":
+  - docs/**/*
+  - "*.md"
+
+"[github]":
+  - .github/**/*
+
+"[ci/cd]":
+  - ".github/workflows/**/*"
+  - ".github/actions/**/*"
+
+"[dependencies]":
+  - package.json
+  - pnpm-lock.yaml
+
+"[tools]":
+  - eslint.config.mjs
+  - prettier.config.mjs
+
+"[bug]":
+  - head-branch: ["fix/", "bug/", "bugfix/", "hotfix/"]
+
+"[feature]":
+  - head-branch: ["feat/", "feature/"]
