@@ -69,8 +69,11 @@ export function executeCommand(
   };
 }
 
-function formatOutput(output: unknown): string {
+function formatOutput(output: string | Buffer | null | undefined): string {
   if (!output) return "";
-  const stringOutput = typeof output === "string" ? output : String(output);
+
+  const stringOutput = Buffer.isBuffer(output)
+    ? output.toString("utf8")
+    : output;
   return stringOutput.trim();
 }
