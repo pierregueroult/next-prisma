@@ -18,7 +18,6 @@ const config = defineConfig([
     languageOptions: { globals: globals.node },
   },
   tseslint.configs.recommended,
-  eslintPluginPrettier,
   {
     files: ["**/*.json"],
     plugins: { json },
@@ -31,6 +30,8 @@ const config = defineConfig([
     language: "markdown/gfm",
     extends: ["markdown/recommended"],
   },
+  eslintPluginPrettier,
+  { ignores: ["dist/**/*"] },
 ]);
 
 export default config;
