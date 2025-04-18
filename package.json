@@ -1,12 +1,20 @@
 {
   "name": "@pglabs/next-prisma",
   "version": "0.1.0",
-  "description": "",
+  "description": "Loving both Prisma and Next.js but struggling to make them work together? This package is for you!",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
     "dist"
   ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pierregueroult/next-prisma.git"
+  },
+  "bugs": {
+    "url": "https://github.com/pierregueroult/next-prisma/issues",
+    "email": "contact@pierregueroult.dev"
+  },
   "scripts": {
     "build": "tsc",
     "rebuild": "rm -rf dist && pnpm build",
@@ -16,9 +24,19 @@
     "lint:fix": "eslint . --fix",
     "format": "prettier --write ."
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "keywords": [
+    "prisma",
+    "next",
+    "nextjs",
+    "typescript",
+    "orm"
+  ],
+  "author": {
+    "name": "Pierre Guéroult",
+    "email": "contact@pierregueroult.dev",
+    "url": "https://pierregueroult.dev"
+  },
+  "license": "MIT",
   "packageManager": "pnpm@10.6.5",
   "devDependencies": {
     "@eslint/js": "^9.24.0",
