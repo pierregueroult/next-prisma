@@ -1,30 +1,41 @@
-"core":
-  - src/**/*
+core:
+  - changed-files:
+      - any-glob-to-any-file: ["src/**/*"]
 
-"tests":
-  - tests/**/*
+tests:
+  - changed-files:
+      - any-glob-to-any-file: ["tests/**/*"]
 
-"[documentation]":
-  - docs/**/*
-  - "*.md"
+documentation:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "docs/**/*"
+          - "*.md"
 
-"github":
-  - .github/**/*
+github:
+  - changed-files:
+      - any-glob-to-any-file: [".github/**/*"]
 
-"ci":
-  - ".github/workflows/**/*"
-  - ".github/actions/**/*"
+ci:
+  - changed-files:
+      - any-glob-to-any-file:
+          - ".github/workflows/**/*"
+          - ".github/actions/**/*"
 
-"dependencies":
-  - package.json
-  - pnpm-lock.yaml
+dependencies:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "package.json"
+          - "pnpm-lock.yaml"
 
-"tools":
-  - eslint.config.mjs
-  - prettier.config.mjs
+tools:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "eslint.config.mjs"
+          - "prettier.config.mjs"
 
-"bug":
-  - head-branch: ["fix/", "bug/", "bugfix/", "hotfix/"]
+bug:
+  - head-branch: ["^fix/", "^bug/", "^bugfix/", "^hotfix/"]
 
-"feature":
-  - head-branch: ["feat/", "feature/"]
+feature:
+  - head-branch: ["^feat/", "^feature/"]
