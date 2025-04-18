@@ -19,6 +19,7 @@ git checkout -b feat/my-awesome-feature
 ```
 
 Make sure:
+
 - Code is clean and typed
 - You don’t break the build (npm run build)
 - The API remains simple and stable

@@ -1,4 +1,10 @@
-import { spawn, spawnSync, type SpawnOptions, type SpawnSyncOptions, type ChildProcess } from "node:child_process";
+import {
+  spawn,
+  spawnSync,
+  type SpawnOptions,
+  type SpawnSyncOptions,
+  type ChildProcess,
+} from "node:child_process";
 
 interface ExecutionOptions {
   background?: boolean;
@@ -13,8 +19,16 @@ interface ExecutionResult {
   process?: ChildProcess;
 }
 
-export function executeCommand(command: string, args: string[] = [], options: ExecutionOptions = {}): ExecutionResult {
-  const { background = false, failOnError = false, processOptions = {} } = options;
+export function executeCommand(
+  command: string,
+  args: string[] = [],
+  options: ExecutionOptions = {},
+): ExecutionResult {
+  const {
+    background = false,
+    failOnError = false,
+    processOptions = {},
+  } = options;
 
   if (background) {
     const childProcess = spawn(command, args, {

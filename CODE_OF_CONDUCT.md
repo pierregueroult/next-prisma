@@ -7,11 +7,13 @@ We as members, contributors, and maintainers pledge to make participation in our
 ## Our Standards
 
 Examples of behavior that contributes to a positive environment:
+
 - Using welcoming and inclusive language
 - Being respectful of differing viewpoints and experiences
 - Accepting constructive criticism gracefully
 
 Unacceptable behavior includes:
+
 - The use of sexualized language or imagery
 - Trolling, insulting or derogatory comments
 - Personal or political attacks

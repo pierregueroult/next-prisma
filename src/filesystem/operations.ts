@@ -1,4 +1,13 @@
-import { statSync, mkdirSync, writeFileSync, existsSync, readdirSync, rmSync, readFileSync, renameSync } from "node:fs";
+import {
+  statSync,
+  mkdirSync,
+  writeFileSync,
+  existsSync,
+  readdirSync,
+  rmSync,
+  readFileSync,
+  renameSync,
+} from "node:fs";
 import { join } from "node:path";
 
 enum FileType {
@@ -28,7 +37,10 @@ function fileExists(path: string): boolean {
   return pathExists(path, FileType.FILE);
 }
 
-export function migrationsDirectoryExists(rootDir: string, migrationsDir: string = "migrations"): boolean {
+export function migrationsDirectoryExists(
+  rootDir: string,
+  migrationsDir: string = "migrations",
+): boolean {
   return directoryExists(buildPrismaPath(rootDir, migrationsDir));
 }
 
@@ -36,7 +48,10 @@ export function prismaRootExists(rootDir: string): boolean {
   return directoryExists(rootDir);
 }
 
-export function prismaSchemaExists(rootDir: string, schemaFile: string = "schema.prisma"): boolean {
+export function prismaSchemaExists(
+  rootDir: string,
+  schemaFile: string = "schema.prisma",
+): boolean {
   return fileExists(buildPrismaPath(rootDir, schemaFile));
 }
 
@@ -46,11 +61,17 @@ export function createDirectory(path: string): void {
   }
 }
 
-export function createMigrationsDirectory(rootDir: string, migrationsDir: string = "migrations"): void {
+export function createMigrationsDirectory(
+  rootDir: string,
+  migrationsDir: string = "migrations",
+): void {
   createDirectory(buildPrismaPath(rootDir, migrationsDir));
 }
 
-export function createEmptySchema(rootDir: string, schemaFile: string = "schema.prisma"): void {
+export function createEmptySchema(
+  rootDir: string,
+  schemaFile: string = "schema.prisma",
+): void {
   const schemaPath = buildPrismaPath(rootDir, schemaFile);
   writeFileSync(schemaPath, "", { flag: "wx" });
 }
@@ -83,7 +104,10 @@ export function moveDirectory(sourceDir: string, targetDir: string): void {
   }
 }
 
-export function addDefaultModels(rootDir: string, schemaFile: string = "schema.prisma"): void {
+export function addDefaultModels(
+  rootDir: string,
+  schemaFile: string = "schema.prisma",
+): void {
   const schemaPath = buildPrismaPath(rootDir, schemaFile);
   const defaultModels = `\
 model User {
@@ -108,7 +132,7 @@ model Post {
 export function updateClientOutputDirectory(
   rootDir: string,
   schemaFile: string = "schema.prisma",
-  outputDir: string = "client"
+  outputDir: string = "client",
 ): void {
   const schemaPath = buildPrismaPath(rootDir, schemaFile);
 
@@ -116,9 +140,12 @@ export function updateClientOutputDirectory(
     throw new Error(`Schema file not found: ${schemaPath}`);
   }
 
-  const schemaContent = fileExists(schemaPath) ? readFileSync(schemaPath, "utf-8") : "";
+  const schemaContent = fileExists(schemaPath)
+    ? readFileSync(schemaPath, "utf-8")
+    : "";
 
-  const generatorPattern = /generator client \{\s*provider\s*=\s*"prisma-client-js"\s*(?:output\s*=\s*".*?"\s*)?\}/g;
+  const generatorPattern =
+    /generator client \{\s*provider\s*=\s*"prisma-client-js"\s*(?:output\s*=\s*".*?"\s*)?\}/g;
   const updatedGenerator = `generator client {
   provider = "prisma-client-js"
   output   = "./${outputDir}"
@@ -131,7 +158,10 @@ export function updateClientOutputDirectory(
   writeFileSync(schemaPath, updatedContent, { encoding: "utf-8" });
 }
 
-export function addGitIgnoreFile(rootDir: string, clientDir: string = "client"): void {
+export function addGitIgnoreFile(
+  rootDir: string,
+  clientDir: string = "client",
+): void {
   const gitIgnorePath = buildPrismaPath(rootDir, ".gitignore");
   const gitignoreContent = `\
 # Ignore the client folder
