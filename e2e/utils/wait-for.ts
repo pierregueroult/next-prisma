@@ -4,6 +4,14 @@ export function waitFor(url: string, port: string, timeout: number = 10000) {
   const startTime = Date.now();
 
   return new Promise((resolve, reject) => {
+    const retry = () => {
+      if (Date.now() - startTime > timeout) {
+        reject(new Error(`Timeout waiting for ${url}:${port}`));
+      } else {
+        setTimeout(check, 500);
+      }
+    };
+
     const check = () => {
       const options = {
         hostname: url,
@@ -18,14 +26,6 @@ export function waitFor(url: string, port: string, timeout: number = 10000) {
       });
       req.on("error", retry);
       req.end();
-    };
-
-    const retry = () => {
-      if (Date.now() - startTime > timeout) {
-        reject(new Error(`Timeout waiting for ${url}:${port}`));
-      } else {
-        setTimeout(check, 500);
-      }
     };
 
     check();
