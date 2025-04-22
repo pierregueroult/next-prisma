@@ -3,3 +3,6 @@ dist/
 coverage/
 
 .DS_Store
+
+e2e/fixture/*
+!e2e/fixture/starter

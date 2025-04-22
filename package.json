@@ -23,7 +23,8 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
-    "test": "vitest",
+    "test": "vitest run tests",
+    "e2e": "vitest run e2e",
     "test:coverage": "vitest --coverage"
   },
   "keywords": [
