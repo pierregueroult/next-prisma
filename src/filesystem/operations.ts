@@ -10,14 +10,15 @@ import {
 } from "node:fs";
 import { join } from "node:path";
 
-enum FileType {
+export enum FileType {
   FILE = "file",
   DIRECTORY = "directory",
 }
 
-function pathExists(path: string, type: FileType): boolean {
+export function pathExists(path: string, type: FileType): boolean {
   try {
     const stats = statSync(path);
+    if (!stats) return false;
     return type === FileType.FILE ? stats.isFile() : stats.isDirectory();
   } catch (err) {
     if (err instanceof Error && "code" in err && err.code === "ENOENT") {
@@ -27,15 +28,15 @@ function pathExists(path: string, type: FileType): boolean {
   }
 }
 
-function buildPrismaPath(rootDir: string, filename: string): string {
-  return join(rootDir, filename);
-}
-
-function directoryExists(path: string): boolean {
+export function directoryExists(path: string): boolean {
   return pathExists(path, FileType.DIRECTORY);
 }
 
-function fileExists(path: string): boolean {
+export function buildPrismaPath(rootDir: string, filename: string): string {
+  return join(rootDir, filename);
+}
+
+export function fileExists(path: string): boolean {
   return pathExists(path, FileType.FILE);
 }
 
@@ -174,9 +175,7 @@ migrations/migration_lock.toml
   try {
     writeFileSync(gitIgnorePath, gitignoreContent, { flag: "wx" });
   } catch (err) {
-    // Vérification typesafe de l'erreur
     if (err instanceof Error && "code" in err && err.code === "EEXIST") {
-      // Le fichier existe déjà, on ignore l'erreur
       return;
     }
     throw err;
