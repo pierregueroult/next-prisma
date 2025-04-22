@@ -5,4 +5,7 @@ const nextConfig: NextConfig = {
   /* config options here */
 };
 
-export default withNextPrisma(nextConfig);
+export default withNextPrisma(nextConfig, {
+  runMigration: true,
+  startStudio: true,
+});
