@@ -69,7 +69,9 @@ export function executeCommand(
   };
 }
 
-function formatOutput(output: string | Buffer | null | undefined): string {
+export function formatOutput(
+  output: string | Buffer | null | undefined,
+): string {
   if (!output) return "";
 
   const stringOutput = Buffer.isBuffer(output)

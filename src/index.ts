@@ -39,13 +39,14 @@ export function withNextPrisma(
   };
 }
 
-function setupPrisma(
+export function setupPrisma(
   rootDir: string,
   dbProvider: string,
   shouldRunMigration: boolean,
   enableStudio: boolean,
+  ignoreAlreadysInitialized = false, // for testing purposes only
 ): void {
-  if (prismaInitialized) {
+  if (prismaInitialized && !ignoreAlreadysInitialized) {
     return;
   }
 
