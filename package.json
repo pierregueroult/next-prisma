@@ -77,7 +77,10 @@
     "hooks": {
       "before:init": [
         "git pull",
-        "npm run build"
+        "pnpm run build",
+        "pnpm run lint",
+        "pnpm run test",
+        "pnpm run e2e"
       ],
       "after:bump": [
         "npx auto-changelog -p"

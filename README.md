@@ -62,3 +62,35 @@ You can configure the package by adding a second argument to the `withNextPrisma
 
 - `startStudio`: boolean (default: false)
   - If set to `true`, the package will automatically start Prisma Studio when you run `next dev` in development mode.
+
+
+## Contributing
+
+If you want to contribute to the project, feel free to open an issue or a pull request. We welcome any contributions, whether it's bug fixes, new features, or improvements to the documentation.
+
+Read the [contributing guide](./CONTRIBUTING.md) and [code of conduct](./CODE_OF_CONDUCT.md) for more information.
+
+```bash
+git clone https://github.com/pglabs/next-prisma.git
+cd next-prisma
+pnpm install
+```
+Make sure to use `pnpm` to install the dependencies or at least make sure to have it installed globally since some tests require it ( most of them actually, especially the one under the directory `e2e`, that init several next.js projects and test the package usecase scenarios).
+
+Here are the available scripts:
+- `pnpm build`: Build the package in `dist` folder
+- `pnpm test`: Run all unit tests (under the directory `tests`)
+- `pnpm e2e`: Run all e2e tests (under the directory `e2e`)
+- `pnpm lint`: Run the linter
+- `pnpm format`: Format the code with Prettier
+- `pnpm release`: Release a new version of the package (that's my job there)
+
+To test the project during your development project feel free to duplicate the `e2e/fixture/starter` folder and run the following command:
+
+```bash
+pnpm dev
+```
+
+## License
+
+This project is licensed under the MIT License. See the [LICENSE](./LICENSE) file for more information.
