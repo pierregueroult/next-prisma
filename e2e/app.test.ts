@@ -5,8 +5,8 @@ import { fetchPage, isResponding } from "./utils/fetch";
 
 import type { ChildProcess } from "node:child_process";
 import { mkdir, rm, cp } from "node:fs/promises";
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { join } from "node:path";
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
 
 describe("Next.js Plugin E2E", () => {
   let tempDir: string;
@@ -59,6 +59,22 @@ describe("Next.js Plugin E2E", () => {
     await waitFor("localhost", "3002", 60000);
     const response = await fetchPage("http://localhost:3002");
 
+    expect(response.status).toBe(200);
+    expect(response.headers.get("content-type")).toMatch(/html/);
+  }, 120_000);
+
+  it("should be able to start development server with --turbo", async () => {
+    nextProcess = runCommandInBackground(
+      "pnpm",
+      ["run", "dev", "--turbo", "--port", "3002"],
+      {
+        cwd: tempDir,
+        stdio: "inherit",
+      },
+    );
+
+    await waitFor("localhost", "3002", 60000);
+    const response = await fetchPage("http://localhost:3002");
     expect(response.status).toBe(200);
     expect(response.headers.get("content-type")).toMatch(/html/);
   }, 120_000);
@@ -140,6 +156,34 @@ describe("Next.js Plugin E2E", () => {
     }, 120_000);
 
     it("should start the prisma studio", async () => {
+      expect(await isResponding(5555)).toBe(true);
+    }, 120_000);
+  });
+
+  describe("🚀 Turbopack Development (next dev --turbo)", () => {
+    beforeEach(async () => {
+      nextProcess = runCommandInBackground(
+        "pnpm",
+        ["run", "dev", "--turbo", "--port", "3002"],
+        {
+          cwd: tempDir,
+          stdio: "inherit",
+        },
+      );
+
+      await waitFor("localhost", "3002", 60000);
+    }, 120_000);
+
+    it("should display the default page with Turbopack", async () => {
+      const response = await fetchPage("http://localhost:3002");
+      const text = await response.text();
+      expect(response.status).toBe(200);
+      expect(text).toContain(
+        "Get started by editing <code>src/app/page.tsx</code>.",
+      );
+    }, 120_000);
+
+    it("should start the prisma studio with Turbopack", async () => {
       expect(await isResponding(5555)).toBe(true);
     }, 120_000);
   });
