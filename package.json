@@ -1,6 +1,6 @@
 {
   "name": "@pglabs/next-prisma",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Loving both Prisma and Next.js but struggling to make them work together? This package is for you!",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
