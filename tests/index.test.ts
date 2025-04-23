@@ -1,7 +1,6 @@
 import { describe, beforeEach, it, expect, vi, afterEach } from "vitest";
 import { join } from "node:path";
 
-// Mock dependencies
 vi.mock("../src/filesystem/operations.ts", () => ({
   prismaRootExists: vi.fn(),
   migrationsDirectoryExists: vi.fn(),
@@ -15,160 +14,144 @@ vi.mock("../src/prisma/commands", () => ({
   startStudio: vi.fn().mockReturnValue(true),
 }));
 
-describe("withNextPrisma", () => {
-  let mockWebpackConfig;
-  let mockWebpackContext;
-  let originalConsoleLog;
+const originalArgv = process.argv;
+const originalPpid = process.ppid;
 
+describe("withNextPrisma", () => {
   beforeEach(() => {
     vi.resetModules();
     vi.resetAllMocks();
-
-    originalConsoleLog = console.log;
-    console.log = vi.fn();
-
-    mockWebpackConfig = { module: { rules: [] } };
-    mockWebpackContext = {
-      dev: true,
-      isServer: true,
-      defaultLoaders: {},
-      buildId: "test-build-id",
-    };
+    process.argv = [...originalArgv];
   });
 
   afterEach(() => {
-    console.log = originalConsoleLog;
+    process.argv = originalArgv;
+    Object.defineProperty(process, "ppid", { value: originalPpid });
   });
 
-  it("should return a valid NextConfig object", async () => {
+  it("should return the provided NextConfig object", async () => {
     const { withNextPrisma } = await import("../src/index");
+    const config = { reactStrictMode: true };
+
+    const result = withNextPrisma(config);
+
+    expect(result).toEqual(config);
+    expect(result.reactStrictMode).toBe(true);
+  });
+
+  it("should return an empty object if no config is provided", async () => {
+    const { withNextPrisma } = await import("../src/index");
+
     const result = withNextPrisma();
 
-    expect(result).toBeTypeOf("object");
-    expect(result.webpack).toBeTypeOf("function");
+    expect(result).toEqual({});
   });
 
-  it("should preserve the original NextConfig object properties", async () => {
-    const { withNextPrisma } = await import("../src/index");
-    const originalConfig = {
-      reactStrictMode: true,
-      distDir: "custom-build",
-      custom: "value",
-    };
+  it("should not call setupPrisma if command is not 'dev'", async () => {
+    // Mock argv to simulate a non-dev command
+    process.argv = ["node", "script.js", "build"];
 
-    const result = withNextPrisma(originalConfig);
+    // Use a spy to check if setupPrisma is called
+    const { withNextPrisma, setupPrisma } = await import("../src/index");
+    const setupPrismaSpy = vi.spyOn({ setupPrisma }, "setupPrisma");
 
-    expect(result.reactStrictMode).toBe(true);
-    expect(result.distDir).toBe("custom-build");
-    expect(result.custom).toBe("value");
-    expect(result.webpack).toBeTypeOf("function");
+    withNextPrisma();
+
+    expect(setupPrismaSpy).not.toHaveBeenCalled();
   });
 
-  it("should define the webpack key as function if none is given", async () => {
-    const { withNextPrisma } = await import("../src/index");
-    const config = withNextPrisma({});
+  it("should call setupPrisma if command is 'dev' and ppid is not 1", async () => {
+    process.argv = ["node", "script.js", "dev"];
+    Object.defineProperty(process, "ppid", { value: 123 });
 
-    expect(config.webpack).toBeTypeOf("function");
-
-    const webpackResult = config.webpack!(
-      mockWebpackConfig,
-      mockWebpackContext,
+    const { prismaRootExists, migrationsDirectoryExists } = await import(
+      "../src/filesystem/operations"
     );
-    expect(webpackResult).toEqual(mockWebpackConfig);
+    const {
+      initializePrisma,
+      formatSchema,
+      runMigration,
+      generateClient,
+      startStudio: startStudioMock,
+    } = await import("../src/prisma/commands");
+
+    vi.mocked(prismaRootExists).mockReturnValue(false);
+    vi.mocked(migrationsDirectoryExists).mockReturnValue(false);
+
+    const { withNextPrisma } = await import("../src/index");
+
+    withNextPrisma(
+      {},
+      {
+        prismaRoot: "test-prisma",
+        dbProvider: "postgres",
+        runMigration: true,
+        startStudio: false,
+      },
+    );
+
+    expect(initializePrisma).toHaveBeenCalledWith("test-prisma", "postgres");
+    expect(formatSchema).toHaveBeenCalledWith(
+      join("test-prisma", "schema.prisma"),
+    );
+    expect(runMigration).toHaveBeenCalledWith(
+      join("test-prisma", "schema.prisma"),
+    );
+    expect(generateClient).toHaveBeenCalledWith(
+      join("test-prisma", "schema.prisma"),
+    );
+    expect(startStudioMock).not.toHaveBeenCalled();
   });
 
-  describe("webpack function behavior", () => {
-    it("should call the original webpack function if provided", async () => {
-      const originalWebpack = vi.fn().mockImplementation((config) => {
-        config.modified = true;
-        return config;
-      });
+  it("should not call setupPrisma if ppid is 1", async () => {
+    process.argv = ["node", "script.js", "dev"];
+    Object.defineProperty(process, "ppid", { value: 1 });
 
-      const { withNextPrisma } = await import("../src/index");
-      const config = withNextPrisma({ webpack: originalWebpack });
+    const indexModule = await import("../src/index");
 
-      const result = config.webpack!(mockWebpackConfig, mockWebpackContext);
+    const setupPrismaSpy = vi.spyOn(indexModule, "setupPrisma");
 
-      expect(originalWebpack).toHaveBeenCalledWith(
-        mockWebpackConfig,
-        mockWebpackContext,
-      );
-      expect(result.modified).toBe(true);
-    });
+    indexModule.withNextPrisma();
 
-    it("should NOT call setupPrisma if isServer is false", async () => {
-      const { withNextPrisma, setupPrisma } = await import("../src/index");
-      const setupPrismaSpy = vi.spyOn({ setupPrisma }, "setupPrisma");
+    expect(setupPrismaSpy).not.toHaveBeenCalled();
+  });
 
-      const config = withNextPrisma();
+  it("should use default options if not provided", async () => {
+    process.argv = ["node", "script.js", "dev"];
+    Object.defineProperty(process, "ppid", { value: 123 });
 
-      config.webpack!(mockWebpackConfig, {
-        ...mockWebpackContext,
-        isServer: false,
-      });
+    const { prismaRootExists, migrationsDirectoryExists } = await import(
+      "../src/filesystem/operations"
+    );
+    const {
+      initializePrisma,
+      formatSchema,
+      runMigration,
+      generateClient,
+      startStudio: startStudioMock,
+    } = await import("../src/prisma/commands");
 
-      expect(setupPrismaSpy).not.toHaveBeenCalled();
-    });
+    vi.mocked(prismaRootExists).mockReturnValue(false);
+    vi.mocked(migrationsDirectoryExists).mockReturnValue(false);
 
-    it("should call setupPrisma if dev and isServer are true", async () => {
-      const { prismaRootExists, migrationsDirectoryExists } = await import(
-        "../src/filesystem/operations"
-      );
-      const {
-        initializePrisma,
-        formatSchema,
-        runMigration,
-        generateClient,
-        startStudio,
-      } = await import("../src/prisma/commands");
+    const { withNextPrisma } = await import("../src/index");
 
-      const { withNextPrisma } = await import("../src/index");
+    withNextPrisma();
 
-      vi.mocked(prismaRootExists).mockReturnValue(false);
-      vi.mocked(migrationsDirectoryExists).mockReturnValue(false);
-
-      const config = withNextPrisma(
-        {},
-        {
-          runMigration: true,
-          prismaRoot: "test-prisma",
-          dbProvider: "postgres",
-          startStudio: false,
-        },
-      );
-
-      config.webpack!(mockWebpackConfig, mockWebpackContext);
-
-      expect(initializePrisma).toHaveBeenCalledWith("test-prisma", "postgres");
-      expect(formatSchema).toHaveBeenCalledWith(
-        join("test-prisma", "schema.prisma"),
-      );
-      expect(runMigration).toHaveBeenCalledWith(
-        join("test-prisma", "schema.prisma"),
-      );
-      expect(generateClient).toHaveBeenCalledWith(
-        join("test-prisma", "schema.prisma"),
-      );
-      expect(startStudio).not.toHaveBeenCalled();
-    });
+    expect(initializePrisma).toHaveBeenCalledWith("prisma", "sqlite");
+    expect(formatSchema).toHaveBeenCalledWith(join("prisma", "schema.prisma"));
+    expect(runMigration).toHaveBeenCalledWith(join("prisma", "schema.prisma"));
+    expect(generateClient).toHaveBeenCalledWith(
+      join("prisma", "schema.prisma"),
+    );
+    expect(startStudioMock).not.toHaveBeenCalled();
   });
 });
 
 describe("setupPrisma", () => {
-  let mockWebpackConfig;
-  let mockWebpackContext;
-
   beforeEach(() => {
     vi.resetAllMocks();
     vi.resetModules();
-
-    mockWebpackConfig = { module: { rules: [] } };
-    mockWebpackContext = {
-      dev: true,
-      isServer: true,
-      defaultLoaders: {},
-      buildId: "test-build-id",
-    };
   });
 
   it("should initialize, format, migrate (if enabled), and generate when root does not exist", async () => {
@@ -329,26 +312,24 @@ describe("setupPrisma", () => {
     );
   });
 
-  it("should use default prismaRoot and dbProvider if not specified", async () => {
-    const { prismaRootExists, migrationsDirectoryExists } = await import(
-      "../src/filesystem/operations"
+  it("should not run setup again if prismaInitialized is true", async () => {
+    const { prismaRootExists } = await import("../src/filesystem/operations");
+    const { initializePrisma, generateClient } = await import(
+      "../src/prisma/commands"
     );
-    const { initializePrisma, formatSchema, runMigration, generateClient } =
-      await import("../src/prisma/commands");
 
     vi.mocked(prismaRootExists).mockReturnValue(false);
-    vi.mocked(migrationsDirectoryExists).mockReturnValue(false);
 
-    const { withNextPrisma } = await import("../src/index");
-    const config = withNextPrisma();
+    const { setupPrisma } = await import("../src/index");
 
-    config.webpack!(mockWebpackConfig, mockWebpackContext);
+    setupPrisma("prisma", "sqlite", false, false, false);
+    expect(initializePrisma).toHaveBeenCalledTimes(1);
+    expect(generateClient).toHaveBeenCalledTimes(1);
 
-    expect(initializePrisma).toHaveBeenCalledWith("prisma", "sqlite");
-    expect(formatSchema).toHaveBeenCalledWith(join("prisma", "schema.prisma"));
-    expect(runMigration).toHaveBeenCalledWith(join("prisma", "schema.prisma"));
-    expect(generateClient).toHaveBeenCalledWith(
-      join("prisma", "schema.prisma"),
-    );
+    vi.resetAllMocks();
+
+    setupPrisma("prisma", "sqlite", false, false, false);
+    expect(initializePrisma).not.toHaveBeenCalled();
+    expect(generateClient).not.toHaveBeenCalled();
   });
 });
