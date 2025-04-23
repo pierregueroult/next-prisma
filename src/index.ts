@@ -16,27 +16,21 @@ import {
 let prismaInitialized = false;
 
 export function withNextPrisma(
-  config: NextConfig = {},
+  config: Partial<NextConfig> = {},
   {
     runMigration = true,
     prismaRoot = "prisma",
     dbProvider = "sqlite",
     startStudio = false,
   }: Partial<PrismaConfig> = {},
-): NextConfig {
-  return {
-    ...config,
-    webpack: (webpackConfig, { dev, isServer, ...options }) => {
-      if (dev && isServer) {
-        setupPrisma(prismaRoot, dbProvider, runMigration, startStudio);
-      }
+): Partial<NextConfig> {
+  const [command] = process.argv.slice(2).filter((arg) => !arg.startsWith("-"));
 
-      if (typeof config.webpack === "function") {
-        return config.webpack(webpackConfig, { dev, isServer, ...options });
-      }
-      return webpackConfig;
-    },
-  };
+  if (command === "dev" && !prismaInitialized && process.ppid !== 1) {
+    setupPrisma(prismaRoot, dbProvider, runMigration, startStudio);
+  }
+
+  return config;
 }
 
 export function setupPrisma(
